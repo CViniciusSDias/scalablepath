@@ -3,14 +3,14 @@
 namespace App\Tests;
 
 use App\Entity\Post;
-use App\Repository\ApiPostRepository;
+use App\Repository\ApiDoctrinePostRepositoryDecorator;
 use App\Repository\DoctrinePostRepository;
-use App\Repository\PostRepositoryChain;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class PostRepoTest extends TestCase
+class ApiDoctrinePostRepositoryDecoratorTest extends TestCase
 {
-    public function testSomething(): void
+    public function testApiShouldOnlyBeCalledIfDatabaseIsEmpty(): void
     {
         // Arrange
         $post = new Post(1, '', '', '');
@@ -20,10 +20,7 @@ class PostRepoTest extends TestCase
             ->method('all')
             ->willReturn([$post]);
 
-        $apiRepo = $this->createMock(ApiPostRepository::class);
-        $apiRepo->expects($this->never())->method('all');
-
-        $sut = new PostRepositoryChain($doctrineRepo, $apiRepo);
+        $sut = new ApiDoctrinePostRepositoryDecorator($doctrineRepo, $this->createStub(HttpClientInterface::class));
 
         // Act
         $posts = $sut->all();
